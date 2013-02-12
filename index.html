@@ -1,0 +1,246 @@
+<!doctype html>
+<html>
+   <head>
+	<meta name="viewport" content="width=device-width,initial-scale=1"> 
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <style type="text/css">
+    .mensaje{color:red;}
+    </style>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+	<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script> 
+	<script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+	<script type="text/javascript" src="cordova-2.2.0.js"></script>
+	<script type="text/javascript">
+    $(document).on("ready",iniciar);
+    function iniciar()
+    {
+        $("#servicio").on("click",function(){
+            servicios();
+        });
+        $("#area").on("click",function(){
+            areaAnterior();
+        });
+    };
+	var dataJson = new Array();
+    var showing = 0 ;
+    var idarea = 0;
+    var area;
+	function json(){
+		var list_visible = $("#inicio").is(":visible");
+			$(".result-count").html("cargando...");
+            for(var i in dataJson){
+                showing++;
+            	$("#element_list").append($("<li>").append($("<a>").attr({'title':dataJson[i].servicio,'href':'javascript:area('+dataJson[i].id+')'}).text(dataJson[i].servicio)));	
+            }
+            $(".result-count").html("Mostrando "+showing);
+            if (list_visible) {
+					$("#element_list").listview("refresh");
+			}
+    };
+    function areaAnterior(){
+        var list_visible = $("#inicio").is(":visible");
+        showing=0;
+        $.ajax({
+                    async:true,
+                    type: "json",
+                    url: "http://localhost/Symfony/web/app_dev.php/API_Areas/"+window.idarea,
+                    beforeSend: function(){
+                        $(".result-count").html("cargando...");
+
+                    },
+                    success: function(datos){
+                        dataJson = eval(datos);
+
+                        $("#element_list").empty();
+                        $("#element_list").html('<li data-role="list-divider">Area</li>');
+                        for(var i in dataJson){
+                            showing++;
+                            $("#element_list").append($("<li>").append($("<a>").attr({'title':dataJson[i].servicio,'href':'javascript:Pacientes("'+dataJson[i].servicio+'")'}).text(dataJson[i].servicio)));
+                        }
+                        $(".result-count").html("Mostrando "+showing);
+                        if (list_visible) {
+                                $("#element_list").listview("refresh");
+                        }
+                    },
+                    error: function (obj, error, objError){
+                    }
+        });
+    };
+    function area(idarea){
+        window.idarea=idarea;
+        var list_visible = $("#inicio").is(":visible");
+        showing=0;
+    	$.ajax({
+                    async:true,
+                    type: "json",
+                    url: "http://localhost/Symfony/web/app_dev.php/API_Areas/"+idarea,
+                    beforeSend: function(){
+                        $(".result-count").html("cargando...");
+
+                    },
+                    success: function(datos){
+                        dataJson = eval(datos);
+
+                        $("#element_list").empty();
+                        $("#element_list").html('<li data-role="list-divider">Area</li>');
+                        for(var i in dataJson){
+                            showing++;
+                            $("#element_list").append($("<li>").append($("<a>").attr({'title':dataJson[i].servicio,'href':'javascript:Pacientes("'+dataJson[i].servicio+'")'}).text(dataJson[i].servicio)));
+                        }
+                        $(".result-count").html("Mostrando "+showing);
+                        if (list_visible) {
+                                $("#element_list").listview("refresh");
+                        }
+                    },
+                    error: function (obj, error, objError){
+                    }
+		});
+    };
+    function Pacientes(area){
+        area=area;
+        var list_visible = $("#inicio").is(":visible");
+        showing=0;
+        $.ajax({
+                    async:true,
+                    type: "json",
+                    url: "http://localhost/Symfony/web/app_dev.php/API_Pacientes/"+area,
+                    beforeSend: function(){
+                        $(".result-count").html("cargando...");
+                    },
+                    success: function(datos){
+                        dataJson = eval(datos);
+                        if (window.dataJson==0) {
+                            $(".result-count").text("NO HAY PACIENTES").addClass( "mensaje");
+                            setTimeout(function() {
+                                $(".result-count").removeClass( "mensaje" );
+                            }, 1500 );
+                        }else{
+                            $("#element_list").empty();
+                            $("#element_list").html('<li data-role="list-divider">Pacientes</li>');
+                            for(var i in dataJson){
+                                showing++;
+                                $("#element_list").append($("<li>").html('<a href="javascript:Instrucciones(\''+dataJson[i].idPaciente+'\')" data-rel="popup">'+dataJson[i].paciente+'</a>'));
+                            }
+                            $(".result-count").html("Mostrando "+showing);
+                            if (list_visible) {
+                                    $("#element_list").listview("refresh");
+                            }
+                        }
+                    },
+                    error: function (obj, error, objError){
+                    }
+        });
+    };
+    function Instrucciones(idPaciente)
+    {
+        var list_visible = $("#inicio").is(":visible");
+        $.ajax({
+                    async:true,
+                    type: "json",
+                    url: "http://localhost/Symfony/web/app_dev.php/API_Instrucciones/"+idPaciente,
+                    beforeSend: function(){
+                        $(".result-count").html("cargando...");
+                    },
+                    success: function(datos){
+                        dataJson = eval(datos);
+                        if (window.dataJson==0) {
+                            $("#popupBasic p").text("NO HAY DATOS PARA ESTE PACIENTE.");
+                            $( "#popupBasic" ).popup( "open" );
+                             $(".result-count").text("No hay datos para este paciente.");
+                        }else{
+                            $("#popupBasic p").html(
+                                "Dieta: "+dataJson[0].Dieta+"<br/>"+
+                                "Solucion: "+dataJson[0].Solucion+"<br/>"+
+                                "Comentarios: "+dataJson[0].Comentarios+"<br/>"+
+                                "Presentacion: "+dataJson[0].Presentacion+"<br/>"+
+                                "FolioIndicacion: "+dataJson[0].FolioIndicacion+"<br/>"+
+                                "Cantidad: "+dataJson[0].Cantidad+"<br/>"+
+                                "Metodo: "+dataJson[0].Metodo+"<br/>"+
+                                "Tomas: "+dataJson[0].Tomas+"<br/>"+
+                                "Estatus: "+dataJson[0].Estatus
+                                );
+                        
+                            $( "#popupBasic" ).popup( "open" );
+                            $(".result-count").html("Mostrando "+showing);
+                            if (list_visible) {
+                                    $("#popupBasic").listview("refresh");
+                            }
+                        }
+                    },
+                    error: function (obj, error, objError){
+                    }
+        });
+    };
+    function servicios(){
+        var list_visible = $("#inicio").is(":visible");
+        showing=0;
+        $.ajax({
+                    async:true,
+                    type: "json",
+                    url: "http://localhost/Symfony/web/app_dev.php/API_Servicios",
+                    beforeSend: function(){
+                        $(".result-count").html("cargando...");
+                    },
+                    success: function(datos){
+                        dataJson = eval(datos);
+                        $("#element_list").empty();
+                        $("#element_list").html('<li data-role="list-divider">Servicios</li>');
+                        for(var i in dataJson){
+                            showing++;
+                            $("#element_list").append($("<li>").append($("<a>").attr({'title':dataJson[i].servicio,'href':'javascript:area('+dataJson[i].id+')'}).text(dataJson[i].servicio)));
+                        }
+                        $(".result-count").html("Mostrando "+showing);
+                        if (list_visible) {
+                                $("#element_list").listview("refresh");
+                        }
+                    },
+        });
+    };
+    
+    $("#inicio").live("pagecreate",function(){
+			$.ajax({
+                    async:true,
+                    type: "json",
+                    url: "http://localhost/Symfony/web/app_dev.php/API_Servicios",
+                     beforeSend: function(){
+                    },
+                    success: function(datos){
+                        dataJson = eval(datos);
+                        json();
+                        
+                    },
+                    error: function (obj, error, objError){
+                    }
+			});
+	});
+	$(document).on('click', '[data-role="navbar"] a', function () {
+            $.mobile.changePage($(this).attr("data-href"), {
+                transition: "none",
+                changeHash: false
+        	});        	
+		    return false;
+		});
+	</script>
+   </head>
+   <body>
+		<div id="inicio" data-role="page">
+            <div data-role="header" data-theme="c"  data-position="fixed"><h1>HOSPITAL CIVIL DE CULIACAN</h1>
+                <div data-role="navbar">
+                    <ul>
+                        <li><a href="#" id="servicio" class="ui-btn-active ui-state-persist" data-iconpos="left" data-icon="grid">SERVICIOS</a></li>
+                        <li><a href="#" id="area" data-iconpos="left" data-icon="grid">Area</a></li>
+                        <li><a href="#pacientes" data-iconpos="left" data-icon="grid">Pacientes</a></li>
+                    </ul>
+                </div><!--end navbar-->     
+            </div><!--end header-->
+			<div data-role="content">
+                <div class="result-count"></div><br>
+				<ul data-role="listview" data-theme="d" data-divider-theme="c" data-inset="true" data-filter="true" id="element_list"><!--vista de listas-->
+					<li data-role="list-divider">Servicios</li><!--dividir -->
+				</ul>
+                <div data-role="popup" id="popupBasic"><p></p></div>
+			</div>	
+		</div>
+   </body>   
+</html>
